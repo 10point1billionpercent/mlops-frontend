@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Plant Control Panel 🌱</title>
+
+<!-- Bootstrap -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<style>
+    body {
+        background-image: url(lol.avif);
+        height: 100vh;
+        color: white;
+        font-family: 'Segoe UI', sans-serif;
+    }
+
+    .glass {
+        background: rgba(255, 255, 255, 0.08);
+        backdrop-filter: blur(15px);
+        border-radius: 20px;
+        padding: 30px;
+        box-shadow: 0 8px 64px rgba(69, 255, 125, 0.3);
+        backdrop-filter: blur(10px);
+        gap:auto;
+    }
+
+    .slider-value {
+        font-weight: bold;
+    }
+
+    .plant-btn, .plant-btn:hover {
+        width: 100%;
+        margin-top: 10px;
+        background-color: #43c51c;
+        color: black;
+    }
+
+    input[type=range] {
+        width: 100%;
+        accent-color: #32c505; /* 🌱 your green */
+
+    }
+
+    .btn-primary, .btn-primary:hover {
+        background-color: #0b7a4c;
+        border: none;
+
+    }
+
+
+</style>
+</head>
+
+<body class="d-flex align-items-center justify-content-center">
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-6 col-md-8">
+           
+            <div class="glass">
+
+                <h3 class="text-center mb-4">🌱 Plant Control Panel</h3>
+
+                <!-- Moisture -->
+                <label>💧 Soil Moisture (%)</label>
+                <input type="range" min="0" max="100" value="50" id="moisture" oninput="updateValue('moistureVal', this.value)">
+                <div class="slider-value" id="moistureVal">50%</div>
+
+                <!-- Temperature -->
+                <label class="mt-3">🌡️ Temperature (°C)</label>
+                <input type="range" min="0" max="50" value="25" id="temp" oninput="updateValue('tempVal', this.value)">
+                <div class="slider-value" id="tempVal">25°C</div>
+
+                <!-- Humidity -->
+                <label class="mt-3">💨 Humidity (%)</label>
+                <input type="range" min="0" max="100" value="60" id="humidity" oninput="updateValue('humidityVal', this.value)">
+                <div class="slider-value" id="humidityVal">60%</div>
+
+                <!-- Light -->
+                <label class="mt-3">☀️ Light Level</label>
+                <input type="range" min="0" max="1000" value="500" id="light" oninput="updateValue('lightVal', this.value)">
+                <div class="slider-value" id="lightVal">500</div>
+
+                <!-- Plant Type -->
+                <div class="mt-4">
+                    <label>🌿 Plant Water Requirement</label>
+
+                    <button class="btn plant-btn" onclick="setPlantType('low')">Low</button>
+                    <button class="btn plant-btn" onclick="setPlantType('medium')">Medium</button>
+                    <button class="btn plant-btn" onclick="setPlantType('high')">High</button>
+
+
+                    <div class="mt-2" id="plantTypeDisplay">Selected: None</div>
+                </div>
+
+                <!-- Submit -->
+                <button class="btn btn-primary w-100 mt-4" onclick="sendData()">🚀 Send Data</button>
+
+                <div class="mt-3 text-center" id="status"></div>
+
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+let selectedPlantType = null;
+
+// Update slider values
+function updateValue(id, value) {
+    if(id.includes("temp")) {
+        document.getElementById(id).innerText = value + "°C";
+    } else if(id.includes("moisture") || id.includes("humidity")) {
+        document.getElementById(id).innerText = value + "%";
+    } else {
+        document.getElementById(id).innerText = value;
+    }
+}
+
+// Set plant type
+function setPlantType(type) {
+    selectedPlantType = type;
+    document.getElementById("plantTypeDisplay").innerText = "Selected: " + type.toUpperCase();
+}
+
+// Send data
+function sendData() {
+    const endpoint = "https://nonmannered-expropriable-karin.ngrok-free.dev"; // 👈 YOU WILL SET THIS LATER
+
+    const data = {
+        moisture: document.getElementById("moisture").value,
+        temperature: document.getElementById("temp").value,
+        humidity: document.getElementById("humidity").value,
+        light: document.getElementById("light").value,
+        water_level: selectedPlantType
+    };
+
+    console.log(data)
+
+    fetch(endpoint, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(data)
+    })
+    .then(res => res.json())
+    .then(data => {
+        document.getElementById("status").innerText = "💥 Data sent successfully!";
+        console.log(data);
+    })
+    .catch(err => {
+        document.getElementById("status").innerText = "❌ Error sending data";
+        console.error(err);
+    });
+}
+</script>
+
+</body>
+</html>
