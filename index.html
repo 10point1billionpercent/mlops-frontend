@@ -24,7 +24,7 @@
         padding: 30px;
         box-shadow: 0 8px 64px rgba(69, 255, 125, 0.3);
         backdrop-filter: blur(10px);
-        gap:auto;
+        gap: 20px;
     }
 
     .slider-value {
@@ -44,12 +44,23 @@
 
     }
 
-    .btn-primary, .btn-primary:hover {
+    .btn-primary, .btn-primary:hover, .btn-primary:active, .btn-primary:focus {
         background-color: #0b7a4c;
         border: none;
 
     }
 
+    #status.success {
+        padding: 10px;
+        border-radius: 10px;
+        border: 2px solid #32c505;
+    }
+
+    #status.error {
+        padding: 10px;
+        border-radius: 10px;
+        border: 2px solid #c50505;
+    }
 
 </style>
 </head>
@@ -64,6 +75,7 @@
 
                 <h3 class="text-center mb-4">🌱 Plant Control Panel</h3>
 
+                <div class="mt-3 text-center" id="status"></div>
                 <!-- Moisture -->
                 <label>💧 Soil Moisture (%)</label>
                 <input type="range" min="0" max="100" value="50" id="moisture" oninput="updateValue('moistureVal', this.value)">
@@ -99,8 +111,6 @@
                 <!-- Submit -->
                 <button class="btn btn-primary w-100 mt-4" onclick="sendData()">🚀 Send Data</button>
 
-                <div class="mt-3 text-center" id="status"></div>
-
             </div>
 
         </div>
@@ -129,18 +139,21 @@ function setPlantType(type) {
 
 // Send data
 function sendData() {
-    const endpoint = "https://nonmannered-expropriable-karin.ngrok-free.dev/predict"; // 👈 YOU WILL SET THIS LATER
+    const statusDiv = document.getElementById("status");
+    const endpoint = "https://nonmannered-expropriable-karin.ngrok-free.dev/predict";
 
+    // 1. Gather data from your inputs
     const data = {
         moisture: document.getElementById("moisture").value,
         temperature: document.getElementById("temp").value,
         humidity: document.getElementById("humidity").value,
         light: document.getElementById("light").value,
-        water_level: selectedPlantType
+        water_level: selectedPlantType // This is your global variable
     };
 
-    console.log(data)
+    console.log("Payload:", data);
 
+    // 2. Start the request
     fetch(endpoint, {
         method: "POST",
         headers: {
@@ -148,14 +161,65 @@ function sendData() {
         },
         body: JSON.stringify(data)
     })
-    .then(res => res.json())
+    .then(res => {
+        // Clear previous state/classes
+        statusDiv.classList.remove('success', 'error');
+
+        // Handle 422: Specifically for missing Plant Type
+        if (res.status === 422) {
+            statusDiv.innerText = "⚠️ Please select a Plant Water Requirement!";
+            statusDiv.classList.add('error');
+            
+            // Auto-hide after 5 seconds
+            setTimeout(() => {
+                statusDiv.innerText = '';
+                statusDiv.classList.remove('error');
+            }, 10000);
+            
+            throw new Error("Validation Error (422)");
+        }
+
+        // Handle other non-OK responses (e.g., 500)
+        if (!res.ok) {
+            statusDiv.innerText = `❌ Server Error (${res.status})`;
+            statusDiv.classList.add('error');
+            
+            setTimeout(() => {
+                statusDiv.innerText = '';
+                statusDiv.classList.remove('error');
+            }, 10000);
+            
+            throw new Error("Server Error");
+        }
+
+        return res.json();
+    })
     .then(data => {
-        document.getElementById("status").innerText = "💥 Data sent successfully!";
-        console.log(data);
+        // Success: Show the prediction
+        if (data.prediction) {
+            statusDiv.innerText = `💡 Model says plant is ${data.prediction}`;
+            statusDiv.classList.add('success');
+
+            // Hide success message after 15 seconds
+            setTimeout(() => {
+                statusDiv.innerText = '';
+                statusDiv.classList.remove('success');
+            }, 15000);
+        }
     })
     .catch(err => {
-        document.getElementById("status").innerText = "❌ Error sending data";
-        console.error(err);
+        console.error("Fetch error:", err);
+        
+        // Only show "Connection failed" if a specific error wasn't already handled
+        if (!statusDiv.classList.contains('error')) {
+            statusDiv.innerText = "❌ Connection failed. Check your local server.";
+            statusDiv.classList.add('error');
+            
+            setTimeout(() => {
+                statusDiv.innerText = '';
+                statusDiv.classList.remove('error');
+            }, 10000);
+        }
     });
 }
 </script>
