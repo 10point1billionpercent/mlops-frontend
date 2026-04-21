@@ -360,4 +360,11 @@ async function sendBatchPrediction() {
     }
 }
 
-document.getElementById("batchFile").addEventListener(
+document.getElementById("batchFile").addEventListener("change", function (event) {
+    const file = event.target.files[0];
+    document.getElementById("batchFileName").innerText = file ? file.name : "No file chosen";
+});
+</script>
+
+</body>
+</html>
