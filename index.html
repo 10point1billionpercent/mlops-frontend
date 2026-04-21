@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -142,6 +143,17 @@
 
                 <div class="mt-3 text-center mb-4" id="status"></div>
 
+                <div class="mb-4">
+                    <label class="form-label" for="deploymentLink">Deployment Link</label>
+                        <div class="helper-text mb-2">Whatever base URL you paste here will be used for both prediction requests.</div>
+                    <input
+                        class="form-control"
+                        id="deploymentLink"
+                        type="url"
+                        placeholder="http://localhost:8000"
+                    >
+                </div>
+
                 <div class="section-card mb-4">
                     <div class="section-title">Single Prediction</div>
                     <div class="row g-3">
@@ -206,8 +218,18 @@ function setStatus(message, type) {
     }
 }
 
+function normalizeBaseUrl(url) {
+    return url.trim().replace(/\/+$/, "");
+}
+
 function getBaseUrl() {
-    return "http://localhost:8000";
+    const baseUrl = normalizeBaseUrl(document.getElementById("deploymentLink").value);
+
+    if (!baseUrl) {
+        throw new Error("Please paste the deployment link first.");
+    }
+
+    return baseUrl;
 }
 
 function getSinglePredictionPayload() {
@@ -338,11 +360,4 @@ async function sendBatchPrediction() {
     }
 }
 
-document.getElementById("batchFile").addEventListener("change", function (event) {
-    const file = event.target.files[0];
-    document.getElementById("batchFileName").innerText = file ? file.name : "No file chosen";
-});
-</script>
-
-</body>
-</html>
+document.getElementById("batchFile").addEventListener(
